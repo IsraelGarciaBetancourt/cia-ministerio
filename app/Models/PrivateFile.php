@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Storage;
 
 class PrivateFile extends Model
 {
@@ -15,6 +16,18 @@ class PrivateFile extends Model
         'mime_type',
         'uploaded_by',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Cuando se elimina un registro PrivateFile…
+        static::deleting(function ($file) {
+            if ($file->file_path) {
+                Storage::delete($file->file_path); // elimina del local
+            }
+        });
+    }
 
     // Usuario que subió el archivo
     public function uploader()

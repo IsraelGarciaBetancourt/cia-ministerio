@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Post extends Model
@@ -20,6 +21,29 @@ class Post extends Model
     protected $casts = [
         'post_date' => 'date',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($post) {
+
+            // Eliminar portada
+            if ($post->cover_image) {
+                Storage::disk('public')->delete($post->cover_image);
+            }
+
+            // Eliminar media asociado
+            foreach ($post->media as $media) {
+
+                if (!$media->is_external && $media->file_path) {
+                    Storage::disk('public')->delete($media->file_path);
+                }
+
+                $media->delete();
+            }
+        });
+    }
 
     // Un post tiene muchas imágenes/videos
     public function media()

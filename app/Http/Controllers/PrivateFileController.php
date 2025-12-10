@@ -46,9 +46,8 @@ class PrivateFileController extends Controller
     // Borrar archivo privado
     public function destroy(PrivateFile $privateFile)
     {
-        Storage::delete($privateFile->file_path);
-        $privateFile->delete();
-
+        $privateFile->delete(); // El modelo ya borra el archivo automáticamente
         return back()->with('success', 'Archivo eliminado');
     }
+
 }
