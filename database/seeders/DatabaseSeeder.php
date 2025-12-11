@@ -26,7 +26,10 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             PostSeeder::class,
             MediaSeeder::class,
+            FileGroupSeeder::class,
+            FileCategorySeeder::class,
             PrivateFileSeeder::class,
+            PrivateFileAttachmentSeeder::class,
         ]);
     }
 }

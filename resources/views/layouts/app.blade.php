@@ -6,10 +6,11 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>@yield('title', 'CIA - Ministerio')</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
     @stack('css')
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
-
+    
     {{-- HEADER --}}
     <header class="bg-white shadow-md sticky top-0 z-40">
         <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -156,6 +157,8 @@
             });
         }
     </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
 
     @stack('scripts')
 </body>

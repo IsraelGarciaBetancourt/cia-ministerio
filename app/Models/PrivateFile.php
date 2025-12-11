@@ -3,41 +3,41 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
 
 class PrivateFile extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'file_name',
-        'file_path',
-        'mime_type',
+        'file_category_id',
+        'title',
+        'description',
         'uploaded_by',
     ];
 
-    protected static function boot()
+    public function category()
     {
-        parent::boot();
-
-        // Cuando se elimina un registro PrivateFile…
-        static::deleting(function ($file) {
-            if ($file->file_path) {
-                Storage::delete($file->file_path); // elimina del local
-            }
-        });
+        return $this->belongsTo(FileCategory::class, 'file_category_id');
     }
 
-    // Usuario que subió el archivo
-    public function uploader()
+    public function attachments()
+    {
+        return $this->hasMany(PrivateFileAttachment::class);
+    }
+
+    public function user()
     {
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 
-    // Ruta solo accesible desde Auth
-    public function getFileUrlAttribute()
+    // Borrado en cascada de archivos físicos
+    protected static function booted(): void
     {
-        return route('private-files.download', $this->id);
+        static::deleting(function (PrivateFile $file) {
+            foreach ($file->attachments as $att) {
+                if ($att->file_path) {
+                    Storage::delete($att->file_path);
+                }
+            }
+        });
     }
 }

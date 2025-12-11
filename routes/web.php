@@ -5,6 +5,8 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PrivateFileController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FileGroupController;
+use App\Http\Controllers\FileCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,9 +15,7 @@ use App\Http\Controllers\AuthController;
 */
 
 // Redirigir home → blog
-Route::get('/', function () {
-    return redirect()->route('blog.index');
-});
+Route::get('/', fn() => redirect()->route('blog.index'));
 
 // Blog público
 Route::get('/blog', [PostController::class, 'publicIndex'])->name('blog.index');
@@ -23,39 +23,79 @@ Route::get('/blog/{post}', [PostController::class, 'show'])->name('blog.show');
 
 /*
 |--------------------------------------------------------------------------
-| Login minimalista (sin Breeze)
+| Login minimalista
 |--------------------------------------------------------------------------
 */
-
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.process');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 /*
 |--------------------------------------------------------------------------
-| Panel Administrativo (requiere autenticación)
+| Panel Administrativo
 |--------------------------------------------------------------------------
 */
-
 Route::middleware(['auth'])->group(function () {
 
-    // CRUD de posts
-    Route::resource('admin/posts', PostController::class)->except(['show'])->names([
-        'index' => 'posts.index',
-        'create' => 'posts.create',
-        'store' => 'posts.store',
-        'edit' => 'posts.edit',
-        'update' => 'posts.update',
-        'destroy' => 'posts.destroy'
-    ]);
+    /*
+    |--------------------------------------------------------------------------
+    | POSTS (Blog backend)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('admin')->group(function () {
 
-    // Subida de media
-    Route::post('admin/posts/{post}/media', [MediaController::class, 'store'])->name('media.store');
-    Route::delete('admin/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
+        // CRUD de posts
+        Route::resource('posts', PostController::class)->except(['show'])->names([
+            'index' => 'posts.index',
+            'create' => 'posts.create',
+            'store' => 'posts.store',
+            'edit' => 'posts.edit',
+            'update' => 'posts.update',
+            'destroy' => 'posts.destroy',
+        ]);
 
-    // Archivos privados (zona solo admin)
-    Route::get('admin/private-files', [PrivateFileController::class, 'index'])->name('private-files.index');
-    Route::post('admin/private-files', [PrivateFileController::class, 'store'])->name('private-files.store');
-    Route::get('admin/private-files/{privateFile}/download', [PrivateFileController::class, 'download'])->name('private-files.download');
-    Route::delete('admin/private-files/{privateFile}', [PrivateFileController::class, 'destroy'])->name('private-files.destroy');
+        // Subida y eliminación de media
+        Route::post('posts/{post}/media', [MediaController::class, 'store'])->name('media.store');
+        Route::delete('media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ARCHIVOS PRIVADOS (Sistema de Grupos, Categorías y Archivos)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('admin/files')->name('files.')->group(function () {
+
+        // GRUPOS
+        Route::resource('groups', FileGroupController::class);
+
+        // CATEGORÍAS
+        Route::resource('groups.categories', FileCategoryController::class);
+
+        // ARCHIVOS
+        Route::resource('groups.categories.files', PrivateFileController::class);
+
+        // PREVIEW DE PDF
+        Route::get('attachments/{attachment}/preview', 
+            [PrivateFileController::class, 'preview']
+        )->name('attachments.preview');
+
+        // VER ARCHIVO (IMAGEN, PDF, DOCX, ETC)
+        Route::get('attachments/{attachment}/view',
+            [PrivateFileController::class, 'viewAttachment']
+        )->name('attachments.view');
+
+        // DESCARGAR
+        Route::get('attachments/{attachment}/download',
+            [PrivateFileController::class, 'downloadAttachment']
+        )->name('attachments.download');
+
+        // ELIMINAR
+        Route::delete('attachments/{attachment}',
+            [PrivateFileController::class, 'destroyAttachment']
+        )->name('attachments.destroy');
+    });
+
+
 });
