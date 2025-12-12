@@ -1,200 +1,224 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('title', 'Panel de Administración')
+@section('title-section', 'Gestión de Posts')
 
 @section('content')
-{{-- Header del panel --}}
-<div class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white">
-    <div class="max-w-7xl mx-auto px-6 py-12">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-4xl font-bold mb-2">⚙️ Panel de Administración</h1>
-                <p class="text-blue-100">Gestiona tus publicaciones</p>
-            </div>
-            <a href="{{ route('blog.index') }}" 
-               class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition shadow-lg inline-flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-                <span>Ver Blog Público</span>
-            </a>
-        </div>
-    </div>
-</div>
 
-<div class="max-w-7xl mx-auto px-6 py-8">
-
-    {{-- Mensajes --}}
+    {{-- ========================================================= --}}
+    {{-- ALERTAS --}}
+    {{-- ========================================================= --}}
     @if(session('success'))
-        <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded mb-6">
-            <p class="font-medium">✓ {{ session('success') }}</p>
-        </div>
+        {{-- Usando componentes de alerta genéricos (asumiendo que existen) --}}
+        <x-alert type="success" class="mb-4">
+            <x-slot name="title">Éxito</x-slot>
+            {{ session('success') }}
+        </x-alert>
     @endif
 
     @if(session('error'))
-        <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded mb-6">
-            <p class="font-medium">✗ {{ session('error') }}</p>
-        </div>
+        <x-alert type="danger" class="mb-4">
+            <x-slot name="title">Error</x-slot>
+            {{ session('error') }}
+        </x-alert>
     @endif
 
-    {{-- Estadísticas rápidas --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm font-medium">Total Posts</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-1">{{ $posts->total() }}</p>
-                </div>
-                <div class="bg-blue-100 rounded-full p-3">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-            </div>
+
+    {{-- ========================================================= --}}
+    {{-- ESTADÍSTICAS RÁPIDAS --}}
+    {{-- ========================================================= --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+
+        {{-- Total posts --}}
+        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <p class="text-sm text-gray-500 font-medium">Total de Posts</p>
+            <p class="text-4xl font-bold mt-2 text-gray-900">{{ $posts->total() }}</p>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm font-medium">Posts Hoy</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-1">
-                        {{ $posts->where('created_at', '>=', now()->startOfDay())->count() }}
-                    </p>
-                </div>
-                <div class="bg-green-100 rounded-full p-3">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
+        {{-- Posts de hoy --}}
+        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <p class="text-sm text-gray-500 font-medium">Posts Hoy</p>
+            <p class="text-4xl font-bold mt-2 text-gray-900">
+                {{ $posts->where('created_at', '>=', now()->startOfDay())->count() }}
+            </p>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
-            <a href="{{ route('posts.create') }}" class="block h-full">
-                <div class="flex items-center justify-center h-full">
-                    <div class="text-center">
-                        <div class="bg-indigo-100 rounded-full p-3 inline-block mb-2">
-                            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
-                        </div>
-                        <p class="text-indigo-600 font-semibold">Crear Nuevo Post</p>
-                    </div>
-                </div>
-            </a>
-        </div>
+        {{-- Crear un post --}}
+        <a href="{{ route('posts.create') }}"
+           class="bg-yellow-500 text-gray-900 font-semibold rounded-xl p-6 shadow-md flex items-center justify-center hover:bg-yellow-600 transition">
+            <span class="text-xl mr-2">✨</span> Crear Nuevo Post
+        </a>
+
     </div>
 
-    {{-- Tabla de posts --}}
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800">Todas las Publicaciones</h2>
+    {{-- ========================================================= --}}
+    {{-- FORMULARIO DE BÚSQUEDA (LA LUPA) --}}
+    {{-- ========================================================= --}}
+    <div class="mb-6">
+        <form action="{{ route('posts.index') }}" method="GET" class="flex items-center max-w-xl">
+            <div class="relative w-full">
+                <input type="search" name="search" id="search"
+                       placeholder="Buscar posts por título..."
+                       value="{{ request('search') }}"
+                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                
+                {{-- Ícono de la Lupa --}}
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+            </div>
+            
+            <button type="submit" class="hidden md:block ml-2 px-4 py-2 bg-gray-100 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+                Buscar
+            </button>
+            
+            {{-- Botón para limpiar la búsqueda --}}
+            @if(request('search'))
+                <a href="{{ route('posts.index') }}" 
+                   class="ml-2 px-4 py-2 bg-red-100 border border-red-300 text-red-700 rounded-lg hover:bg-red-200 transition flex items-center text-sm font-medium">
+                    Limpiar
+                </a>
+            @endif
+        </form>
+    </div>
+
+
+    {{-- ========================================================= --}}
+    {{-- TABLA DE POSTS (RESPONSIVE LISTA) --}}
+    {{-- ========================================================= --}}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+
+        {{-- Header --}}
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-lg font-bold text-gray-900">Todas las Publicaciones @if(request('search')) <span class="font-normal text-gray-500 text-base">({{ $posts->total() }} resultados)</span> @endif</h2>
         </div>
 
         @if($posts->count() > 0)
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50">
+
+            <div class="w-full">
+                <table class="w-full text-sm md:table-fixed border-collapse">
+                    
+                    {{-- Encabezados (Ocultos en móvil) --}}
+                    <thead class="bg-gray-100 hidden md:table-header-group">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Post
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Fecha
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Media
-                            </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Acciones
-                            </th>
+                            <th class="px-6 py-3 text-left font-semibold text-gray-600 uppercase w-1/2">Post</th>
+                            <th class="px-6 py-3 text-left font-semibold text-gray-600 uppercase w-1/6">Fecha</th>
+                            <th class="px-6 py-3 text-left font-semibold text-gray-600 uppercase w-1/6">Media</th>
+                            <th class="px-6 py-3 text-right font-semibold text-gray-600 uppercase w-1/6">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+
+                    <tbody class="divide-y divide-gray-100">
+
                         @foreach($posts as $post)
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center">
+                            
+                            <tr class="hover:bg-gray-50 transition 
+                                       block md:table-row py-4 md:py-0"> 
+
+                                {{-- ---- Columna POST (Título + Imagen) ---- --}}
+                                <td class="px-6 pt-4 pb-2 md:py-4 block md:table-cell">
+                                    <div class="flex items-start gap-4">
+
+                                        {{-- Cover o fallback --}}
                                         @if($post->cover_image)
-                                            <img src="{{ asset('storage/' . $post->cover_image) }}" 
-                                                 alt="{{ $post->title }}"
-                                                 class="w-16 h-16 rounded-lg object-cover mr-4">
+                                            <img src="{{ asset('storage/' . $post->cover_image) }}"
+                                                 class="w-16 h-16 flex-shrink-0 rounded-lg object-cover" />
                                         @else
-                                            <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mr-4">
-                                                <span class="text-white text-2xl">📄</span>
+                                            <div class="w-16 h-16 flex-shrink-0 rounded-lg bg-yellow-100 flex items-center justify-center">
+                                                <span class="text-2xl text-yellow-700">📄</span>
                                             </div>
                                         @endif
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-900">{{ Str::limit($post->title, 50) }}</p>
-                                            <p class="text-sm text-gray-500">{{ Str::limit($post->content, 60) }}</p>
+
+                                        <div class="min-w-0 flex-1">
+                                            <p class="font-semibold text-gray-900 line-clamp-2">
+                                                <span class="md:hidden text-xs text-gray-500 block font-normal mb-1 uppercase">Post:</span>
+                                                {{ Str::limit($post->title, 70) }}
+                                            </p>
+                                            <p class="text-gray-500 text-xs line-clamp-2 mt-1 hidden sm:block">
+                                                {{ Str::limit(strip_tags($post->content), 90) }}
+                                            </p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm text-gray-900">
+
+                                {{-- ---- Columna FECHA ---- --}}
+                                <td class="px-6 py-2 md:py-4 block md:table-cell">
+                                    <span class="text-gray-900">
+                                        <span class="md:hidden text-xs text-gray-500 font-normal mr-2 uppercase">Fecha:</span>
                                         {{ \Carbon\Carbon::parse($post->post_date)->format('d/m/Y') }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        {{ $post->media->count() }} archivos
+
+                                {{-- ---- Columna MEDIA ---- --}}
+                                <td class="px-6 py-2 md:py-4 block md:table-cell">
+                                    <span class="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
+                                        <span class="md:hidden text-gray-500 font-normal mr-2 uppercase">Media:</span>
+                                        {{ $post->media->count() }} archivo(s)
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <a href="{{ route('blog.show', $post) }}" 
-                                           class="text-blue-600 hover:text-blue-900"
-                                           title="Ver">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                            </svg>
+
+                                {{-- ---- Columna ACCIONES ---- --}}
+                                <td class="px-6 pt-2 pb-4 md:py-4 block md:table-cell text-left md:text-right">
+                                    <div class="flex items-center justify-start md:justify-end gap-3">
+
+                                        <span class="md:hidden text-xs text-gray-500 font-normal uppercase">Acciones:</span>
+                                        
+                                        {{-- Ver --}}
+                                        <a href="{{ route('blog.show', $post) }}"
+                                           class="text-gray-600 hover:text-gray-900 transition p-2 border border-gray-300 rounded-lg text-lg"
+                                           title="Ver publicación">
+                                            👁️
                                         </a>
-                                        <a href="{{ route('posts.edit', $post) }}" 
-                                           class="text-indigo-600 hover:text-indigo-900"
+
+                                        {{-- Editar --}}
+                                        <a href="{{ route('posts.edit', $post) }}"
+                                           class="text-blue-600 hover:text-blue-800 transition p-2 border border-gray-300 rounded-lg text-lg"
                                            title="Editar">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                            </svg>
+                                            ✏️
                                         </a>
-                                        <form action="{{ route('posts.destroy', $post) }}" 
-                                              method="POST" 
+
+                                        {{-- Eliminar --}}
+                                        <form action="{{ route('posts.destroy', $post) }}"
+                                              method="POST"
                                               onsubmit="return confirm('¿Eliminar este post?')"
                                               class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" 
-                                                    class="text-red-600 hover:text-red-900"
+
+                                            <button type="submit"
+                                                    class="text-red-500 hover:text-red-700 transition p-2 border border-gray-300 rounded-lg text-lg"
                                                     title="Eliminar">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                </svg>
+                                                🗑️
                                             </button>
                                         </form>
                                     </div>
                                 </td>
+
                             </tr>
                         @endforeach
+
                     </tbody>
                 </table>
             </div>
 
-            {{-- Paginación --}}
-            <div class="px-6 py-4 border-t border-gray-200">
+            {{-- PAGINACIÓN --}}
+            <div class="px-6 py-4 border-t border-gray-100">
                 {{ $posts->links() }}
             </div>
+
         @else
-            <div class="text-center py-12">
+
+            <div class="py-16 text-center">
                 <div class="text-6xl mb-4">📝</div>
-                <h3 class="text-xl font-semibold text-gray-700 mb-2">No hay posts aún</h3>
-                <p class="text-gray-500 mb-4">Crea tu primera publicación</p>
-                <a href="{{ route('posts.create') }}" 
-                   class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No hay posts aún</h3>
+                <p class="text-gray-500 mb-6">Crea tu primera publicación</p>
+
+                <a href="{{ route('posts.create') }}"
+                   class="bg-yellow-500 text-gray-900 px-6 py-3 rounded-lg hover:bg-yellow-600 transition inline-block font-semibold shadow-md">
                     ➕ Crear Post
                 </a>
             </div>
+
         @endif
     </div>
 
-</div>
 @endsection

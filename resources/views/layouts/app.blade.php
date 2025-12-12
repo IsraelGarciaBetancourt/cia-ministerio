@@ -3,162 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>@yield('title', 'CIA - Ministerio')</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('css')
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
-    
-    {{-- HEADER --}}
-    <header class="bg-white shadow-md sticky top-0 z-40">
-        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                
-                {{-- Logo / Nombre --}}
-                <div class="flex items-center">
-                    <a href="{{ route('blog.index') }}" class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                            <span class="text-white font-bold text-xl">C</span>
-                        </div>
-                        <span class="text-xl font-bold text-gray-800">CIA Ministerio</span>
-                    </a>
-                </div>
 
-                {{-- Navegación --}}
-                <div class="hidden md:flex items-center space-x-6">
-                    <a href="{{ route('blog.index') }}" 
-                       class="text-gray-700 hover:text-blue-600 transition font-medium {{ request()->routeIs('blog.*') ? 'text-blue-600' : '' }}">
-                        📰 Blog
-                    </a>
-                    
-                    @auth
-                        <a href="{{ route('posts.index') }}" 
-                           class="text-gray-700 hover:text-blue-600 transition font-medium {{ request()->routeIs('posts.*') && !request()->routeIs('posts.show') ? 'text-blue-600' : '' }}">
-                            ⚙️ Admin
-                        </a>
-                        <form action="{{ route('logout') }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="text-gray-700 hover:text-red-600 transition font-medium">
-                                🚪 Cerrar Sesión
-                            </button>
-                        </form>
-                    @else
-                        <a href="{{ route('login') }}" 
-                           class="text-gray-700 hover:text-blue-600 transition font-medium">
-                            🔐 Iniciar Sesión
-                        </a>
-                    @endauth
-                </div>
+<body class="bg-base text-text-primary min-h-screen flex flex-col">
 
-                {{-- Menú móvil (hamburguesa) --}}
-                <div class="md:hidden">
-                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-blue-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </nav>
+    {{-- ===================================================== --}}
+    {{--                     HEADER (FIGMA)                    --}}
+    {{-- ===================================================== --}}
 
-        {{-- Menú móvil desplegable --}}
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
-            <div class="px-4 py-3 space-y-3">
-                <a href="{{ route('blog.index') }}" 
-                   class="block text-gray-700 hover:text-blue-600 transition font-medium">
-                    📰 Blog
+    <header class="sticky top-0 z-40 bg-[#0D0703]">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+
+            {{-- LOGO + NOMBRE --}}
+            <a href="{{ route('landing.inicio') }}" class="flex items-center gap-3">
+                <img src="{{ asset('images/logo.png') }}" class="h-12 w-auto" alt="CIA Ministerio">
+
+                <span class="text-xl font-semibold text-white">
+                    CIA Ministerio
+                </span>
+            </a>
+
+            {{-- NAV DESKTOP (como Figma: alineado derecha) --}}
+            <div class="hidden md:flex items-center gap-10 text-lg font-semibold">
+
+                {{-- Inicio --}}
+                <a href="{{ route('landing.inicio') }}"
+                   class="transition 
+                          {{ request()->routeIs('landing.*') 
+                                ? 'text-[#F2CB05]' 
+                                : 'text-white hover:text-[#F2CB05]' }}">
+                    Inicio
                 </a>
-                
+
+                {{-- Blog --}}
+                <a href="{{ route('blog.index') }}"
+                   class="transition 
+                          {{ request()->routeIs('blog.*') 
+                                ? 'text-[#F2CB05]' 
+                                : 'text-white hover:text-[#F2CB05]' }}">
+                    Blog
+                </a>
+
+                {{-- Sobre Nosotros --}}
+                <a href="{{ url('/about') }}"
+                   class="transition 
+                          {{ request()->is('about') 
+                                ? 'text-[#F2CB05]' 
+                                : 'text-white hover:text-[#F2CB05]' }}">
+                    Sobre Nosotros
+                </a>
+
                 @auth
-                    <a href="{{ route('posts.index') }}" 
-                       class="block text-gray-700 hover:text-blue-600 transition font-medium">
-                        ⚙️ Admin
+                    <a href="{{ route('posts.index') }}"
+                       class="text-sm transition text-white hover:text-[#F2CB05]">
+                        Admin
                     </a>
-                    <form action="{{ route('logout') }}" method="POST">
+
+                    <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="block w-full text-left text-gray-700 hover:text-red-600 transition font-medium">
-                            🚪 Cerrar Sesión
+                        <button class="ml-4 text-sm text-white hover:text-red-400 transition">
+                            Cerrar Sesión
                         </button>
                     </form>
-                @else
-                    <a href="{{ route('login') }}" 
-                       class="block text-gray-700 hover:text-blue-600 transition font-medium">
-                        🔐 Iniciar Sesión
-                    </a>
                 @endauth
+            </div>
+
+            {{-- BOTÓN MENÚ MÓVIL --}}
+            <button id="mobile-menu-btn" class="md:hidden text-white hover:text-[#F2CB05] transition">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+
+        </nav>
+
+        {{-- NAV MÓVIL --}}
+        <div id="mobile-menu" class="hidden md:hidden bg-[#0D0703] border-t border-white/10">
+            <div class="px-4 py-4 space-y-3 text-base font-semibold">
+
+                <a href="{{ route('landing.inicio') }}"
+                   class="block transition 
+                          {{ request()->routeIs('landing.*') 
+                                ? 'text-[#F2CB05]' 
+                                : 'text-white hover:text-[#F2CB05]' }}">
+                    Inicio
+                </a>
+
+                <a href="{{ route('blog.index') }}"
+                   class="block transition 
+                          {{ request()->routeIs('blog.*') 
+                                ? 'text-[#F2CB05]' 
+                                : 'text-white hover:text-[#F2CB05]' }}">
+                    Blog
+                </a>
+
+                <a href="{{ url('/about') }}"
+                   class="block transition 
+                          {{ request()->is('about') 
+                                ? 'text-[#F2CB05]' 
+                                : 'text-white hover:text-[#F2CB05]' }}">
+                    Sobre Nosotros
+                </a>
+
+                @auth
+                    <a href="{{ route('posts.index') }}"
+                       class="block text-sm text-white hover:text-[#F2CB05] transition">
+                        Admin
+                    </a>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button class="block w-full text-left text-sm text-white hover:text-red-400 transition">
+                            Cerrar Sesión
+                        </button>
+                    </form>
+                @endauth
+
             </div>
         </div>
     </header>
 
-    {{-- CONTENIDO PRINCIPAL --}}
+
+    {{-- ===================================================== --}}
+    {{--                    MAIN CONTENT                      --}}
+    {{-- ===================================================== --}}
     <main class="flex-grow">
         @yield('content')
     </main>
 
-    {{-- FOOTER --}}
-    <footer class="bg-gray-800 text-white mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                
-                {{-- Columna 1: Acerca de --}}
+    {{-- ===================================================== --}}
+    {{--                        FOOTER (FIGMA)                 --}}
+    {{-- ===================================================== --}}
+    <footer class="bg-cia-dark text-cia-light mt-20 pt-12 pb-8">
+
+        <div class="max-w-7xl mx-auto px-6">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
+
+                {{-- ABOUT --}}
                 <div>
-                    <h3 class="text-lg font-bold mb-3">CIA Ministerio</h3>
-                    <p class="text-gray-400 text-sm">
+                    <h3 class="text-lg font-bold text-gold-300 mb-3">CIA Ministerio</h3>
+                    <p class="text-cia-light/70 text-sm">
                         Comparte nuestras noticias y eventos con la comunidad.
                     </p>
                 </div>
 
-                {{-- Columna 2: Enlaces rápidos --}}
+                {{-- LINKS --}}
                 <div>
-                    <h3 class="text-lg font-bold mb-3">Enlaces Rápidos</h3>
+                    <h3 class="text-lg font-bold text-gold-300 mb-3">Enlaces</h3>
                     <ul class="space-y-2 text-sm">
                         <li>
-                            <a href="{{ route('blog.index') }}" class="text-gray-400 hover:text-white transition">
-                                Blog
-                            </a>
+                            <a href="{{ url('/') }}" class="text-cia-light/70 hover:text-gold-300 transition">Inicio</a>
                         </li>
-                        @auth
-                            <li>
-                                <a href="{{ route('posts.index') }}" class="text-gray-400 hover:text-white transition">
-                                    Panel de Administración
-                                </a>
-                            </li>
-                        @endauth
+                        <li>
+                            <a href="{{ route('blog.index') }}" class="text-cia-light/70 hover:text-gold-300 transition">Blog</a>
+                        </li>
+                        <li>
+                            <a href="{{ url('/about') }}" class="text-cia-light/70 hover:text-gold-300 transition">Sobre Nosotros</a>
+                        </li>
                     </ul>
                 </div>
 
-                {{-- Columna 3: Contacto --}}
+                {{-- CONTACT --}}
                 <div>
-                    <h3 class="text-lg font-bold mb-3">Contacto</h3>
-                    <ul class="space-y-2 text-sm text-gray-400">
+                    <h3 class="text-lg font-bold text-gold-300 mb-3">Contacto</h3>
+                    <ul class="space-y-2 text-sm text-cia-light/70">
                         <li>📧 contacto@ciaministerio.com</li>
                         <li>📍 Paccha, Junín, PE</li>
                     </ul>
                 </div>
+
             </div>
 
-            {{-- Copyright --}}
-            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-400">
-                <p>&copy; {{ date('Y') }} CIA Ministerio. Todos los derechos reservados.</p>
+            {{-- COPYRIGHT --}}
+            <div class="border-t border-gold-300/20 mt-10 pt-6 text-center text-sm text-cia-light/60">
+                &copy; {{ date('Y') }} CIA Ministerio — Todos los derechos reservados.
             </div>
+
         </div>
     </footer>
 
-    {{-- Script para menú móvil --}}
+    {{-- MOBILE MENU SCRIPT --}}
     <script>
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-
-        if (mobileMenuBtn) {
-            mobileMenuBtn.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-        }
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        btn?.addEventListener('click', () => menu.classList.toggle('hidden'));
     </script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
 
     @stack('scripts')
 </body>

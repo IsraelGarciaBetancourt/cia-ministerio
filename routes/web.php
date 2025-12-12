@@ -1,12 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PrivateFileController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FileGroupController;
 use App\Http\Controllers\FileCategoryController;
+use Spatie\Permission\Middlewares\RoleMiddleware;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,7 +17,9 @@ use App\Http\Controllers\FileCategoryController;
 */
 
 // Redirigir home → blog
-Route::get('/', fn() => redirect()->route('blog.index'));
+Route::get('/', fn() => redirect()->route('landing.inicio'));
+
+Route::get('/inicio', [LandingController::class, 'index'])->name('landing.inicio');
 
 // Blog público
 Route::get('/blog', [PostController::class, 'publicIndex'])->name('blog.index');
@@ -42,7 +46,7 @@ Route::middleware(['auth'])->group(function () {
     | POSTS (Blog backend)
     |--------------------------------------------------------------------------
     */
-    Route::prefix('admin')->group(function () {
+    Route::prefix('admin')->middleware('role:admin|apostol')->group(function () {
 
         // CRUD de posts
         Route::resource('posts', PostController::class)->except(['show'])->names([
@@ -53,6 +57,10 @@ Route::middleware(['auth'])->group(function () {
             'update' => 'posts.update',
             'destroy' => 'posts.destroy',
         ]);
+
+        // NUEVA RUTA: Subida individual por AJAX
+        Route::post('posts/{post}/media/single', [MediaController::class, 'storeSingle'])
+            ->name('media.storeSingle');
 
         // Subida y eliminación de media
         Route::post('posts/{post}/media', [MediaController::class, 'store'])->name('media.store');
@@ -65,7 +73,7 @@ Route::middleware(['auth'])->group(function () {
     | ARCHIVOS PRIVADOS (Sistema de Grupos, Categorías y Archivos)
     |--------------------------------------------------------------------------
     */
-    Route::prefix('admin/files')->name('files.')->group(function () {
+    Route::prefix('admin/files')->name('files.')->middleware('role:admin|apostol')->group(function () {
 
         // GRUPOS
         Route::resource('groups', FileGroupController::class);

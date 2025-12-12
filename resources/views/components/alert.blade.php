@@ -3,35 +3,42 @@
 @php
     switch ($type) {
         case 'info':
-            $class = 'bg-blue-100 text-blue-800';
+            // Dorado suave, para mensajes informativos
+            $class = 'bg-gold-400/10 border border-gold-400 text-text-primary';
             break;
 
         case 'danger':
-            $class = 'bg-red-100 text-red-800';
+            // Usamos la gama "fire" para errores
+            $class = 'bg-fire-600/10 border border-fire-600 text-fire-600';
             break;
 
-        case 'succes':
-            $class = 'bg-green-100 text-green-800';
+        case 'success':
+            // Podemos usar verdes de Tailwind para éxito
+            $class = 'bg-emerald-50 border border-emerald-500 text-emerald-700';
             break;
 
         case 'warning':
-            $class = 'bg-yellow-100 text-yellow-800';
+            $class = 'bg-amber-50 border border-amber-500 text-amber-700';
             break;
 
         default:
-            $class = 'bg-blue-100 text-blue-800';
+            $class = 'bg-gold-400/10 border border-gold-400 text-text-primary';
             break;
     }
 @endphp
 
-<div {{ $attributes->merge(['class' => 'p-4 rounded-lg ' . $class]) }} role="alert">
-    <span class="font-bold text-[15px] inline-block mr-4">{{$title ?? 'Info!'}}</span>
-    <span class="block text-sm font-medium sm:inline max-sm:mt-2">{{$slot}}</span>
+<div {{ $attributes->merge(['class' => 'p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center gap-2 ' . $class]) }} role="alert">
+    <span class="font-bold text-[15px] inline-block mr-2">
+        {{ $title ?? 'Info!' }}
+    </span>
+    <span class="block text-sm font-medium">
+        {{ $slot }}
+    </span>
 </div>
 
-{{--         <x-alert type="info">
-            <x-slot name="title">
-                Titulo Alerta
-            </x-slot>
-            Contenido de la alerta
-        </x-alert> --}}
+{{-- Uso:
+<x-alert type="info">
+    <x-slot name="title">Título Alerta</x-slot>
+    Contenido de la alerta
+</x-alert>
+--}}

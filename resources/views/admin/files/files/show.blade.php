@@ -1,95 +1,98 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', $file->title)
 
 @section('content')
 
-{{-- Breadcrumb --}}
-<div class="bg-white border-b">
-    <div class="max-w-7xl mx-auto px-6 py-4">
-        <div class="flex items-center gap-2 text-sm text-gray-600">
-            <a href="{{ route('files.groups.index') }}" class="hover:text-purple-600 transition">
-                📁 Grupos
-            </a>
-            <span>/</span>
-            <a href="{{ route('files.groups.show', $group) }}" class="hover:text-purple-600 transition">
-                {{ $group->name }}
-            </a>
-            <span>/</span>
-            <a href="{{ route('files.groups.categories.show', [$group, $category]) }}" class="hover:text-purple-600 transition">
-                {{ $category->name }}
-            </a>
-            <span>/</span>
-            <span class="text-purple-600 font-medium">{{ $file->title }}</span>
-        </div>
+{{-- Contenedor principal --}}
+<div class="max-w-7xl mx-auto">
+    
+    {{-- Breadcrumb consistente --}}
+    {{-- Se eliminó el div 'bg-white border-b' ya que el layout principal lo provee --}}
+    <div class="mb-6 text-sm flex items-center space-x-1 text-gray-500">
+        <a href="{{ route('files.groups.index') }}" class="text-blue-600 hover:text-blue-800 hover:underline transition">
+            Grupos
+        </a>
+        <span class="text-gray-400">/</span>
+        <a href="{{ route('files.groups.show', $group) }}" class="text-blue-600 hover:text-blue-800 hover:underline transition">
+            {{ $group->name }}
+        </a>
+        <span class="text-gray-400">/</span>
+        <a href="{{ route('files.groups.categories.show', [$group, $category]) }}" class="text-blue-600 hover:text-blue-800 hover:underline transition">
+            {{ $category->name }}
+        </a>
+        <span class="text-gray-400">/</span>
+        <span class="text-gray-800 font-medium">{{ $file->title }}</span>
     </div>
-</div>
 
-<div class="max-w-7xl mx-auto px-6 py-8">
-
-    {{-- Header --}}
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <div class="flex items-start justify-between mb-4">
-            <div class="flex-1">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $file->title }}</h1>
-                <div class="flex items-center gap-4 text-sm text-gray-600">
-                    <span class="inline-flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        {{ $file->created_at->format('d/m/Y H:i') }}
-                    </span>
-                    @if($file->uploader)
-                        <span class="inline-flex items-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                            {{ $file->uploader->name }}
-                        </span>
-                    @endif
-                </div>
-            </div>
-
-            <div class="flex gap-3">
-                <a href="{{ route('files.groups.categories.files.edit', [$group, $category, $file]) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+    {{-- Header (Título, Meta y Botones de Acción) --}}
+    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-gray-200 mb-8">
+        <div class="flex-1">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $file->title }}</h1>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600">
+                
+                {{-- Fecha de creación --}}
+                <span class="inline-flex items-center gap-1">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    Editar
-                </a>
-
-                <form action="{{ route('files.groups.categories.files.destroy', [$group, $category, $file]) }}"
-                      method="POST" 
-                      onsubmit="return confirm('¿Eliminar este archivo y todos sus adjuntos?')"
-                      class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" 
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    {{ $file->created_at->format('d/m/Y H:i') }}
+                </span>
+                
+                {{-- Uploader --}}
+                @if($file->uploader)
+                    <span class="inline-flex items-center gap-1">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
-                        Eliminar
-                    </button>
-                </form>
+                        Subido por: {{ $file->uploader->name }}
+                    </span>
+                @endif
             </div>
         </div>
 
-        @if($file->description)
-            <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-purple-500">
-                <p class="text-gray-700">{{ $file->description }}</p>
-            </div>
-        @endif
+        {{-- Botones de Acción --}}
+        <div class="flex gap-3 pt-1">
+            <a href="{{ route('files.groups.categories.files.edit', [$group, $category, $file]) }}"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-md">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Editar
+            </a>
+
+            <form action="{{ route('files.groups.categories.files.destroy', [$group, $category, $file]) }}"
+                  method="POST" 
+                  onsubmit="return confirm('⚠️ Advertencia: ¿Eliminar este archivo y todos sus adjuntos?')"
+                  class="inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" 
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium shadow-md">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Eliminar
+                </button>
+            </form>
+        </div>
     </div>
+    
+    {{-- Descripción del archivo --}}
+    @if($file->description)
+        {{-- CAMBIO DE ESTILO: De shadow-md p-6 a shadow-sm p-5 con border-l-4 blue --}}
+        <div class="bg-white rounded-xl shadow-sm p-5 mb-8 border-l-4 border-blue-500">
+            <p class="text-gray-700">{{ $file->description }}</p>
+        </div>
+    @endif
 
     {{-- Adjuntos --}}
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="bg-white rounded-xl shadow-sm p-6">
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-2xl font-bold text-gray-900">📎 Adjuntos ({{ $file->attachments->count() }})</h2>
             <a href="{{ route('files.groups.categories.files.edit', [$group, $category, $file]) }}" 
-               class="text-sm text-purple-600 hover:text-purple-700 font-medium">
-                + Agregar más archivos
+               class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                <span class="text-xl leading-none">+</span> Agregar más archivos
             </a>
         </div>
 
@@ -97,6 +100,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @foreach($file->attachments as $att)
                     @php
+                        // LÓGICA DE CLASIFICACIÓN DEL ARCHIVO (NO TOCADA)
                         $ext = strtolower(pathinfo($att->original_filename, PATHINFO_EXTENSION));
                         $isImage = str_starts_with($att->mime_type, 'image/');
                         $isPDF = $att->mime_type === 'application/pdf';
@@ -120,10 +124,11 @@
                         }
                     @endphp
 
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                    <div class="bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
                         
                         {{-- Thumbnail --}}
-                        <div class="relative h-48 bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center overflow-hidden cursor-pointer"
+                        {{-- COLOR CAMBIADO a blue-500 y indigo-500 --}}
+                        <div class="relative h-48 bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center overflow-hidden cursor-pointer"
                              @if($isImage || $isPDF)
                                 onclick="openLightbox('{{ route('files.attachments.view', $att) }}', '{{ $thumbnailType }}', '{{ $att->original_filename }}')"
                              @endif>
@@ -135,31 +140,31 @@
                                      class="w-full h-full object-cover">
                             
                             @elseif($isPDF)
-                                {{-- Thumbnail de PDF --}}
+                                {{-- Thumbnail de PDF (SE MANTIENE TU IMAGEN) --}}
                                 <img src="{{ asset('images/pdf-thumbnail.png') }}" 
                                      alt="PDF"
                                      class="h-28 opacity-90">
                             
                             @elseif($isWord)
-                                {{-- Ícono de Word --}}
-                                <div class="text-center">
-                                    <span class="text-7xl">📝</span>
-                                </div>
+                                {{-- Ícono de Word (SE MANTIENE TU IMAGEN) --}}
+                                <img src="{{ asset('images/word-thumbnail.png') }}" 
+                                     alt="PDF"
+                                     class="h-28 opacity-90">
                             
                             @elseif($isExcel)
-                                {{-- Ícono de Excel --}}
+                                {{-- Ícono de Excel (SE MANTIENE EL EMOJI) --}}
                                 <div class="text-center">
                                     <span class="text-7xl">📊</span>
                                 </div>
                             
                             @elseif($isVideo)
-                                {{-- Ícono de Video --}}
+                                {{-- Ícono de Video (SE MANTIENE EL EMOJI) --}}
                                 <div class="text-center">
                                     <span class="text-7xl">🎥</span>
                                 </div>
                             
                             @else
-                                {{-- Archivo genérico --}}
+                                {{-- Archivo genérico (SE MANTIENE EL EMOJI) --}}
                                 <div class="text-center">
                                     <span class="text-7xl">📄</span>
                                 </div>
@@ -168,8 +173,9 @@
                             {{-- Overlay con botones --}}
                             <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
                                 @if($isImage || $isPDF)
+                                    {{-- COLOR CAMBIADO de purple-600 a blue-600 --}}
                                     <button onclick="openLightbox('{{ route('files.attachments.view', $att) }}', '{{ $thumbnailType }}', '{{ $att->original_filename }}')" 
-                                            class="bg-white text-purple-600 rounded-full p-3 hover:bg-purple-50 transition"
+                                            class="bg-white text-blue-600 rounded-full p-3 hover:bg-blue-50 transition"
                                             title="Ver">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -188,22 +194,21 @@
                             </div>
 
                             {{-- Badge de extensión --}}
-                            <div class="absolute top-2 right-2 bg-white rounded px-2 py-1 text-xs font-bold text-gray-700 shadow uppercase">
+                            <div class="absolute top-2 right-2 bg-white rounded-full px-3 py-1 text-xs font-bold text-gray-700 shadow uppercase">
                                 {{ $ext }}
                             </div>
                         </div>
 
                         {{-- Info del archivo --}}
                         <div class="p-4">
-                            <p class="text-xs text-gray-500 mb-1">{{ $att->mime_type }}</p>
-                            <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">
+                            <h3 class="font-semibold text-gray-800 mb-1 line-clamp-2">
                                 {{ $att->original_filename }}
                             </h3>
                             <p class="text-xs text-gray-500 mb-3">
-                                {{ number_format($att->size / 1024, 2) }} KB
+                                {{ number_format($att->size / 1024, 2) }} KB | {{ $att->mime_type }}
                             </p>
 
-                            <div class="flex gap-2 pt-3 border-t">
+                            <div class="flex gap-2 pt-3 border-t border-gray-100">
                                 <a href="{{ route('files.attachments.download', $att) }}"
                                    class="flex-1 text-center text-sm text-blue-600 hover:text-blue-800 font-medium">
                                     ⬇️ Descargar
@@ -212,11 +217,11 @@
                                 <form method="POST"
                                       action="{{ route('files.attachments.destroy', $att) }}"
                                       onsubmit="return confirm('¿Eliminar este adjunto?')"
-                                      class="flex-1">
+                                      class="flex-1 border-l border-gray-100">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" 
-                                            class="w-full text-sm text-red-600 hover:text-red-800 font-medium">
+                                            class="w-full text-sm text-red-600 hover:text-red-800 font-medium pl-2">
                                         🗑️ Eliminar
                                     </button>
                                 </form>
@@ -226,12 +231,17 @@
                 @endforeach
             </div>
         @else
-            <div class="text-center py-12">
-                <div class="text-6xl mb-4">📎</div>
-                <h3 class="text-xl font-semibold text-gray-700 mb-2">No hay adjuntos</h3>
-                <p class="text-gray-500 mb-4">Agrega archivos a este documento</p>
+            {{-- Empty State (Estado vacío) --}}
+            <div class="flex flex-col items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
+                <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-3xl mb-4">
+                    📎
+                </div>
+                <h3 class="text-lg font-medium text-gray-900">No hay archivos adjuntos</h3>
+                <p class="text-gray-500 mt-1 max-w-sm">
+                    Este documento no tiene archivos. Agrega los archivos para que estén disponibles.
+                </p>
                 <a href="{{ route('files.groups.categories.files.edit', [$group, $category, $file]) }}" 
-                   class="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
+                   class="mt-6 inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium shadow-md">
                     + Agregar archivos
                 </a>
             </div>
@@ -240,7 +250,7 @@
 
 </div>
 
-{{-- LIGHTBOX --}}
+{{-- LIGHTBOX (SIN CAMBIOS EN HTML O JS) --}}
 <div id="lightbox" 
      class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden items-center justify-center p-4">
     

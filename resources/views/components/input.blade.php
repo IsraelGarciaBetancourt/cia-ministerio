@@ -1,17 +1,15 @@
-@props([
-    'label' => null,
-    'for' => null,
-])
+@props(['icon' => null])
 
-<div class="mb-4">
-    @if($label)
-        <label for="{{ $for }}" class="block text-sm font-medium mb-1">
-            {{ $label }}
-        </label>
+<div class="relative">
+    @if ($icon)
+        <span class="absolute left-3 top-2.5 text-text-muted">{{ $icon }}</span>
     @endif
 
-    <input 
-        id="{{ $for }}"
-        {{ $attributes->merge(['class' => 'w-full p-2 border rounded']) }}
+    <input
+        {{ $attributes->merge([
+            'class' =>
+            'w-full pl-10 pr-4 py-2 rounded-md bg-light-200 text-text-primary
+            border border-light-200 focus:border-primary-200 focus:ring-primary-200'
+        ]) }}
     >
 </div>

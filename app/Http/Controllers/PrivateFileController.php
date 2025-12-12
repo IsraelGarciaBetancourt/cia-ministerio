@@ -9,6 +9,7 @@ use App\Models\PrivateFileAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class PrivateFileController extends Controller
 {
@@ -24,8 +25,8 @@ class PrivateFileController extends Controller
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'attachments' => 'nullable|array',
+            'description' => 'nullable|string|max:5000',
+            'attachments' => 'nullable|array|max:50',
             'attachments.*' => 'file|max:51200',
         ]);
 
@@ -36,24 +37,38 @@ class PrivateFileController extends Controller
             'uploaded_by' => Auth::id(),
         ]);
 
-        // Guardar adjuntos
+        $uploadedCount = 0;
+        $errors = [];
+
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $uploaded) {
-                $path = $uploaded->store('files', 'local'); // Sin 'private/' porque ya está en local
+                try {
+                    $path = $uploaded->store('files', 'local');
 
-                PrivateFileAttachment::create([
-                    'private_file_id' => $file->id,
-                    'file_path' => $path,
-                    'original_filename' => $uploaded->getClientOriginalName(),
-                    'mime_type' => $uploaded->getMimeType(),
-                    'size' => $uploaded->getSize(),
-                ]);
+                    PrivateFileAttachment::create([
+                        'private_file_id' => $file->id,
+                        'file_path' => $path,
+                        'original_filename' => $uploaded->getClientOriginalName(),
+                        'mime_type' => $uploaded->getMimeType(),
+                        'size' => $uploaded->getSize(),
+                    ]);
+
+                    $uploadedCount++;
+                } catch (\Exception $e) {
+                    $errors[] = $uploaded->getClientOriginalName();
+                    Log::error('Error subiendo archivo: ' . $e->getMessage());
+                }
             }
+        }
+
+        $message = "Documento creado con {$uploadedCount} archivo(s)";
+        if (!empty($errors)) {
+            $message .= ". Errores con: " . implode(', ', $errors);
         }
 
         return redirect()
             ->route('files.groups.categories.show', [$group, $category])
-            ->with('success', 'Documento creado correctamente');
+            ->with('success', $message);
     }
 
     // =========================
@@ -77,46 +92,57 @@ class PrivateFileController extends Controller
     public function update(Request $request, FileGroup $group, FileCategory $category, PrivateFile $file)
     {
         $data = $request->validate([
-            'title' => 'required|string',
-            'description' => 'nullable|string',
-            'attachments.*' => 'nullable|file',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:5000',
+            'attachments' => 'nullable|array|max:50',
+            'attachments.*' => 'nullable|file|max:51200',
             'delete_attachments' => 'nullable|array',
         ]);
 
-        // Actualizar campos
         $file->update([
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
         ]);
 
-        // Eliminar adjuntos si el usuario los marcó
+        $deletedCount = 0;
         if (!empty($data['delete_attachments'])) {
             foreach ($data['delete_attachments'] as $id) {
                 $attachment = PrivateFileAttachment::find($id);
-                if ($attachment) {
+                if ($attachment && $attachment->private_file_id === $file->id) {
                     Storage::delete($attachment->file_path);
                     $attachment->delete();
+                    $deletedCount++;
                 }
             }
         }
 
-        // Subir nuevos adjuntos
+        $uploadedCount = 0;
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $uploaded) {
-                $path = $uploaded->store('files', 'local'); // Sin 'private/'
+                try {
+                    $path = $uploaded->store('files', 'local');
 
-                $file->attachments()->create([
-                    'original_filename' => $uploaded->getClientOriginalName(),
-                    'file_path' => $path,
-                    'mime_type' => $uploaded->getMimeType(),
-                    'size' => $uploaded->getSize(),
-                ]);
+                    $file->attachments()->create([
+                        'original_filename' => $uploaded->getClientOriginalName(),
+                        'file_path' => $path,
+                        'mime_type' => $uploaded->getMimeType(),
+                        'size' => $uploaded->getSize(),
+                    ]);
+
+                    $uploadedCount++;
+                } catch (\Exception $e) {
+                    Log::error('Error subiendo archivo: ' . $e->getMessage());
+                }
             }
         }
 
+        $message = "Archivo actualizado";
+        if ($uploadedCount > 0) $message .= " (+{$uploadedCount} nuevos)";
+        if ($deletedCount > 0) $message .= " (-{$deletedCount} eliminados)";
+
         return redirect()
             ->route('files.groups.categories.files.show', [$group, $category, $file])
-            ->with('success', 'Archivo actualizado correctamente');
+            ->with('success', $message);
     }
 
     // =========================
@@ -124,16 +150,22 @@ class PrivateFileController extends Controller
     // =========================
     public function destroy(FileGroup $group, FileCategory $category, PrivateFile $file)
     {
+        $attachmentCount = $file->attachments->count();
+
         foreach ($file->attachments as $att) {
-            Storage::delete($att->file_path);
-            $att->delete();
+            try {
+                Storage::delete($att->file_path);
+                $att->delete();
+            } catch (\Exception $e) {
+                Log::error('Error eliminando adjunto: ' . $e->getMessage());
+            }
         }
 
         $file->delete();
 
         return redirect()
             ->route('files.groups.categories.show', [$group, $category])
-            ->with('success', 'Documento eliminado');
+            ->with('success', "Documento y {$attachmentCount} archivo(s) eliminados");
     }
 
     // =========================
@@ -153,9 +185,42 @@ class PrivateFileController extends Controller
     }
 
     // =========================
-    // VER ARCHIVO (Imagen, PDF, etc)
+    // VER ARCHIVO (Imagen, PDF, etc) - CON RUTAS MÚLTIPLES
     // =========================
     public function viewAttachment(PrivateFileAttachment $attachment)
+    {
+        // Intentar múltiples rutas posibles (NECESARIO para compatibilidad)
+        $possiblePaths = [
+            storage_path('app/' . $attachment->file_path),
+            storage_path('app/private/' . $attachment->file_path),
+        ];
+
+        $path = null;
+        foreach ($possiblePaths as $possiblePath) {
+            if (file_exists($possiblePath)) {
+                $path = $possiblePath;
+                break;
+            }
+        }
+
+        if (!$path) {
+            Log::error('Archivo no encontrado', [
+                'file_path' => $attachment->file_path,
+                'tried_paths' => $possiblePaths
+            ]);
+            abort(404, 'Archivo no encontrado en el servidor');
+        }
+
+        return response()->file($path, [
+            'Content-Type' => $attachment->mime_type,
+            'Content-Disposition' => 'inline; filename="' . $attachment->original_filename . '"'
+        ]);
+    }
+
+    // =========================
+    // DESCARGAR ADJUNTO - CON RUTAS MÚLTIPLES
+    // =========================
+    public function downloadAttachment(PrivateFileAttachment $attachment)
     {
         // Intentar múltiples rutas posibles
         $possiblePaths = [
@@ -172,28 +237,11 @@ class PrivateFileController extends Controller
         }
 
         if (!$path) {
-            \Log::error('Archivo no encontrado', [
+            Log::error('Archivo no encontrado para descarga', [
                 'file_path' => $attachment->file_path,
                 'tried_paths' => $possiblePaths
             ]);
-            abort(404, 'Archivo no encontrado en el servidor');
-        }
-
-        return response()->file($path, [
-            'Content-Type' => $attachment->mime_type,
-            'Content-Disposition' => 'inline; filename="' . $attachment->original_filename . '"'
-        ]);
-    }
-
-    // =========================
-    // DESCARGAR ADJUNTO
-    // =========================
-    public function downloadAttachment(PrivateFileAttachment $attachment)
-    {
-        $path = storage_path('app/' . $attachment->file_path);
-
-        if (!file_exists($path)) {
-            abort(404);
+            abort(404, 'Archivo no encontrado');
         }
 
         return response()->download($path, $attachment->original_filename);
@@ -208,11 +256,17 @@ class PrivateFileController extends Controller
         $group = $file->category->group;
         $category = $file->category;
 
-        Storage::delete($attachment->file_path);
-        $attachment->delete();
+        try {
+            Storage::delete($attachment->file_path);
+            $attachment->delete();
+            $message = 'Adjunto eliminado correctamente';
+        } catch (\Exception $e) {
+            Log::error('Error eliminando adjunto: ' . $e->getMessage());
+            $message = 'Error al eliminar el adjunto';
+        }
 
         return redirect()
             ->route('files.groups.categories.files.show', [$group, $category, $file])
-            ->with('success', 'Adjunto eliminado correctamente');
+            ->with('success', $message);
     }
 }

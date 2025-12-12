@@ -3,116 +3,314 @@
 @section('title', 'Blog - CIA Ministerio')
 
 @section('content')
-{{-- Hero Section --}}
-<div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-    <div class="max-w-6xl mx-auto px-6 py-16">
-        <h1 class="text-5xl font-bold mb-4">📰 Eventos y Noticias</h1>
-        <p class="text-xl text-blue-100">Mantente informado con las últimas actualizaciones de nuestra comunidad</p>
-    </div>
-</div>
 
-<div class="max-w-6xl mx-auto px-6 py-8">
-
-    {{-- Mensajes --}}
-    @if(session('success'))
-        <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded mb-6">
-            <p class="font-medium">{{ session('success') }}</p>
-        </div>
-    @endif
-
-    {{-- Contador --}}
-    <div class="mb-8 flex items-center justify-between">
-        <p class="text-gray-600">
-            <span class="font-bold text-2xl text-gray-800">{{ $posts->total() }}</span> 
-            <span class="text-lg">{{ $posts->total() == 1 ? 'publicación' : 'publicaciones' }}</span>
+{{-- ===================================================== --}}
+{{-- HERO --}}
+{{-- ===================================================== --}}
+<section class="bg-primary-100 py-12 border-b border-primary-200 mt-10">
+    <div class="max-w-6xl mx-auto px-4">
+        <h1 class="text-4xl font-bold text-text-primary mb-3">
+            Eventos y Noticias
+        </h1>
+        <p class="text-text-muted text-lg">
+            Mantente informado con las últimas actualizaciones de nuestra iglesia.
         </p>
-        
-        @auth
-            <a href="{{ route('posts.create') }}" 
-               class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition inline-flex items-center gap-2">
-                <span>➕</span>
-                <span>Crear Post</span>
-            </a>
-        @endauth
+    </div>
+</section>
+
+{{-- ===================================================== --}}
+{{-- CONTENEDOR --}}
+{{-- ===================================================== --}}
+<div class="max-w-6xl mx-auto px-4 py-10">
+
+    {{-- ================================================= --}}
+    {{-- SEARCH BAR --}}
+    {{-- ================================================= --}}
+    <form method="GET" class="mb-8">
+        <div class="relative">
+            <span class="absolute left-4 top-2.5 text-text-muted">🔍</span>
+
+            <input type="text"
+                   name="search"
+                   value="{{ request('search') }}"
+                   placeholder="Buscar..."
+                   class="w-full pl-12 pr-4 py-2 rounded-lg bg-light border border-border 
+                          text-text-primary shadow-sm
+                          focus:border-primary-200 focus:ring-primary-200">
+        </div>
+    </form>
+
+
+    {{-- ================================================= --}}
+    {{-- FILTROS (ÚNICA / RANGO con MESES + AÑO) --}}
+    {{-- ================================================= --}}
+    <div
+        x-data="{
+            open: {{ request('from_month') || request('to_month') || request('month') ? 'true' : 'false' }},
+            rango: {{ request('from_month') || request('to_month') ? 'true' : 'false' }},
+        }"
+        class="mb-12"
+    >
+        {{-- Botón --}}
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-text-primary">Filtros</h3>
+
+            <button type="button"
+                    @click="open = !open"
+                    class="px-4 py-2 rounded-md bg-dark text-light hover:bg-dark-100 transition text-sm">
+                Filtros
+            </button>
+        </div>
+
+
+        {{-- PANEL --}}
+        <form method="GET"
+            x-show="open"
+            x-transition
+            class="bg-light border border-border rounded-xl p-6 shadow-sm">
+
+            {{-- Mantener búsqueda al aplicar filtros --}}
+            <input type="hidden" name="search" value="{{ request('search') }}">
+
+            {{-- Toggle Única/Rango --}}
+            <div class="flex items-center justify-between mb-6">
+                <span class="text-sm text-text-muted">Fecha única / Rango</span>
+
+                <button type="button"
+                        @click="rango = !rango"
+                        class="relative w-12 h-6 rounded-full transition"
+                        :class="rango ? 'bg-dark' : 'bg-light-200 border border-border'">
+                    <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition"
+                        :class="rango ? 'translate-x-6' : ''"></span>
+                </button>
+            </div>
+
+
+            {{-- ===================================================== --}}
+            {{-- FECHA ÚNICA (MES + AÑO) --}}
+            {{-- ===================================================== --}}
+            <div x-show="!rango" x-transition class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+                {{-- Mes --}}
+                <div>
+                    <label class="text-sm text-text-primary">Mes</label>
+                    <select name="month"
+                        class="mt-1 w-full rounded-md bg-light border border-border px-3 py-2
+                            focus:border-primary-200 focus:ring-primary-200">
+                        <option value="">Seleccione</option>
+
+                        @foreach([
+                            '01' => 'Enero',
+                            '02' => 'Febrero',
+                            '03' => 'Marzo',
+                            '04' => 'Abril',
+                            '05' => 'Mayo',
+                            '06' => 'Junio',
+                            '07' => 'Julio',
+                            '08' => 'Agosto',
+                            '09' => 'Septiembre',
+                            '10' => 'Octubre',
+                            '11' => 'Noviembre',
+                            '12' => 'Diciembre'
+                        ] as $num => $name)
+                            <option value="{{ $num }}" {{ request('month') == $num ? 'selected' : '' }}>
+                                {{ $name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Año --}}
+                <div>
+                    <label class="text-sm text-text-primary">Año</label>
+                    <select name="year"
+                        class="mt-1 w-full rounded-md bg-light border border-border px-3 py-2
+                            focus:border-primary-200 focus:ring-primary-200">
+                        <option value="">Seleccione</option>
+
+                        @foreach(range(now()->year, now()->year - 20) as $y)
+                            <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
+                                {{ $y }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+
+            {{-- ===================================================== --}}
+            {{-- RANGO DE FECHAS (MES + AÑO DESDE / HASTA) --}}
+            {{-- ===================================================== --}}
+            <div x-show="rango" x-transition class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+                {{-- Desde --}}
+                <div>
+                    <label class="text-sm text-text-primary">Desde (Mes)</label>
+                    <select name="from_month"
+                        class="mt-1 w-full rounded-md bg-light border border-border px-3 py-2
+                            focus:border-primary-200 focus:ring-primary-200">
+
+                        <option value="">Seleccione</option>
+                        @foreach([
+                            '01' => 'Enero', '02' => 'Febrero', '03' => 'Marzo', '04' => 'Abril',
+                            '05' => 'Mayo', '06' => 'Junio', '07' => 'Julio', '08' => 'Agosto',
+                            '09' => 'Septiembre', '10' => 'Octubre', '11' => 'Noviembre', '12' => 'Diciembre'
+                        ] as $num => $name)
+                            <option value="{{ $num }}" {{ request('from_month') == $num ? 'selected' : '' }}>
+                                {{ $name }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <label class="text-sm text-text-primary mt-3 block">Desde (Año)</label>
+                    <select name="from_year"
+                        class="mt-1 w-full rounded-md bg-light border border-border px-3 py-2
+                            focus:border-primary-200 focus:ring-primary-200">
+                        <option value="">Seleccione</option>
+
+                        @foreach(range(now()->year, now()->year - 20) as $y)
+                            <option value="{{ $y }}" {{ request('from_year') == $y ? 'selected' : '' }}>
+                                {{ $y }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Hasta --}}
+                <div>
+                    <label class="text-sm text-text-primary">Hasta (Mes)</label>
+                    <select name="to_month"
+                        class="mt-1 w-full rounded-md bg-light border border-border px-3 py-2
+                            focus:border-primary-200 focus:ring-primary-200">
+                        <option value="">Seleccione</option>
+
+                        @foreach([
+                            '01' => 'Enero', '02' => 'Febrero', '03' => 'Marzo', '04' => 'Abril',
+                            '05' => 'Mayo', '06' => 'Junio', '07' => 'Julio', '08' => 'Agosto',
+                            '09' => 'Septiembre', '10' => 'Octubre', '11' => 'Noviembre', '12' => 'Diciembre'
+                        ] as $num => $name)
+                            <option value="{{ $num }}" {{ request('to_month') == $num ? 'selected' : '' }}>
+                                {{ $name }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <label class="text-sm text-text-primary mt-3 block">Hasta (Año)</label>
+                    <select name="to_year"
+                        class="mt-1 w-full rounded-md bg-light border border-border px-3 py-2
+                            focus:border-primary-200 focus:ring-primary-200">
+                        <option value="">Seleccione</option>
+
+                        @foreach(range(now()->year, now()->year - 20) as $y)
+                            <option value="{{ $y }}" {{ request('to_year') == $y ? 'selected' : '' }}>
+                                {{ $y }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+            </div>
+
+
+            {{-- BOTONES --}}
+            <div class="flex justify-end gap-4 mt-10">
+                <a href="{{ route('blog.index') }}"
+                class="px-4 py-2 rounded-md border border-border bg-light text-text-muted hover:bg-light-200 transition text-sm">
+                    Limpiar
+                </a>
+
+                <button type="submit"
+                        class="px-6 py-2 rounded-md bg-primary-200 text-dark font-semibold hover:bg-primary-300 transition text-sm">
+                    Aplicar
+                </button>
+            </div>
+        </form>
     </div>
 
-    {{-- Grid de posts --}}
+
+
+    {{-- ===================================================== --}}
+    {{-- LISTADO DE POSTS --}}
+    {{-- ===================================================== --}}
+    <h2 class="text-lg font-semibold text-text-primary mb-4">Últimas publicaciones</h2>
+
     @if($posts->count() > 0)
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+
             @foreach($posts as $post)
-                <article class="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                <article class="bg-light rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-md transition">
+                    
+                    {{-- Imagen o icono por defecto --}}
                     <a href="{{ route('blog.show', $post) }}" class="block">
-                        
-                        {{-- Imagen de portada --}}
-                        <div class="relative h-48 bg-gray-200 overflow-hidden">
+                        <div class="relative h-48 bg-surface-muted flex items-center justify-center">
                             @if($post->cover_image)
-                                <img src="{{ asset('storage/' . $post->cover_image) }}" 
+                                <img src="{{ asset('storage/' . $post->cover_image) }}"
                                      alt="{{ $post->title }}"
-                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                                     class="w-full h-full object-cover">
                             @else
-                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-500">
-                                    <span class="text-white text-6xl">📄</span>
+                                <div class="w-14 h-14 rounded-lg bg-primary-100 flex items-center justify-center">
+                                    {{-- ícono de documento simple --}}
+                                    <span class="text-3xl">📄</span>
                                 </div>
                             @endif
-                            
-                            {{-- Badge de fecha --}}
-                            <div class="absolute top-3 right-3 bg-white rounded-lg px-3 py-1 shadow-md">
-                                <p class="text-xs font-semibold text-gray-700">
-                                    {{ \Carbon\Carbon::parse($post->post_date)->format('d M Y') }}
-                                </p>
-                            </div>
-                        </div>
-
-                        {{-- Contenido --}}
-                        <div class="p-5">
-                            <h2 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition line-clamp-2">
-                                {{ $post->title }}
-                            </h2>
-                            
-                            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-                                {{ Str::limit(strip_tags($post->content), 120) }}
-                            </p>
-
-                            {{-- Footer del card --}}
-                            <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                                <span class="text-blue-600 text-sm font-semibold group-hover:underline">
-                                    Leer más →
-                                </span>
-                                
-                                @if($post->media->count() > 0)
-                                    <div class="flex items-center gap-1 text-gray-500 text-xs">
-                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
-                                        </svg>
-                                        <span>{{ $post->media->count() }}</span>
-                                    </div>
-                                @endif
-                            </div>
                         </div>
                     </a>
+
+                    {{-- Contenido --}}
+                    <div class="p-4">
+                        <p class="text-xs text-primary-200 font-medium mb-1">
+                            {{ \Carbon\Carbon::parse($post->post_date)->format('F d, Y') }}
+                        </p>
+
+                        <a href="{{ route('blog.show', $post) }}"
+                           class="block text-text-primary font-semibold text-sm leading-tight line-clamp-2 hover:text-primary-300 transition mb-2">
+                            {{ $post->title }}
+                        </a>
+
+                        {{-- Descripción corta --}}
+                        <p class="text-xs text-text-muted line-clamp-2 mb-4">
+                            {{ Str::limit(strip_tags($post->content), 110) }}
+                        </p>
+
+                        <div class="flex items-center justify-between pt-3 border-t border-border">
+                            <a href="{{ route('blog.show', $post) }}"
+                               class="text-sm font-semibold text-text-primary hover:text-primary-300 transition">
+                                Leer más →
+                            </a>
+
+                            @if($post->media->count() > 0)
+                                <span class="text-xs text-text-muted flex items-center gap-1">
+                                    📷 {{ $post->media->count() }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
                 </article>
             @endforeach
+
         </div>
 
-        {{-- Paginación --}}
-        <div class="mt-8">
+        {{-- PAGINACIÓN --}}
+        <div class="mt-6 flex justify-center">
             {{ $posts->links() }}
         </div>
+
     @else
-        {{-- Sin posts --}}
-        <div class="text-center py-16">
-            <div class="text-6xl mb-4">📭</div>
-            <h3 class="text-2xl font-bold text-gray-700 mb-2">No hay publicaciones aún</h3>
-            <p class="text-gray-500 mb-6">Sé el primero en crear una publicación</p>
-            
+        {{-- SIN POSTS --}}
+        <div class="text-center py-20">
+            <div class="text-7xl mb-4">📭</div>
+            <h3 class="text-2xl font-bold text-text-primary mb-2">No hay publicaciones aún</h3>
+            <p class="text-text-muted mb-6">Sé el primero en crear una publicación</p>
+
             @auth
-                <a href="{{ route('posts.create') }}" 
-                   class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition">
-                    ➕ Crear mi primera publicación
+                <a href="{{ route('posts.create') }}"
+                   class="inline-block bg-primary-200 text-dark px-8 py-3 rounded-lg hover:bg-primary-300 transition font-semibold">
+                    ➕ Crear publicación
                 </a>
             @endauth
         </div>
     @endif
 
 </div>
+
 @endsection

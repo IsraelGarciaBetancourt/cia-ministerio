@@ -6,18 +6,53 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Facades\Image;
 
 class PostController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $posts = Post::latest()->paginate(10);
+        $query = Post::latest(); // Empezamos a construir la query
+
+        // Filtro por título (la "lupa")
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        // Ejecutamos la paginación, conservando los parámetros de la URL (el 'search')
+        $posts = $query->paginate(10)->withQueryString();
+
         return view('admin.posts.index', compact('posts'));
     }
 
-    public function publicIndex()
+    public function publicIndex(Request $request)
     {
-        $posts = Post::latest()->paginate(10);
+        $query = Post::query();
+
+        // Filtro por rango de fechas
+        if ($request->filled('from')) {
+            $query->whereDate('post_date', '>=', $request->from);
+        }
+
+        if ($request->filled('to')) {
+            $query->whereDate('post_date', '<=', $request->to);
+        }
+
+        // Filtro por texto
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
+                ->orWhere('content', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // Filtro por año
+        if ($request->filled('year')) {
+            $query->whereYear('post_date', $request->year);
+        }
+
+        $posts = $query->latest()->paginate(10)->withQueryString();
+
         return view('public.blog.index', compact('posts'));
     }
 
@@ -94,119 +129,54 @@ class PostController extends Controller
 
     public function destroy(Post $post)
     {
+        // Eliminar portada
         if ($post->cover_image) {
             Storage::disk('public')->delete($post->cover_image);
         }
 
+        // NUEVO: Eliminar TODOS los archivos multimedia asociados
+        foreach ($post->media as $media) {
+            if ($media->file_path) {
+                Storage::disk('public')->delete($media->file_path);
+            }
+            $media->delete();
+        }
+
         $post->delete();
-        return back()->with('success', 'Post eliminado correctamente');
+        
+        return back()->with('success', 'Post y todos sus archivos eliminados correctamente');
     }
 
     /**
-     * Convierte una imagen a WebP usando GD nativo de PHP
+     * [OPTIMIZADO] Convierte una imagen a WebP usando Intervention Image.
+     * Reemplaza la versión original basada en GD.
      */
     private function convertToWebP($uploadedFile, $folder = 'images', $quality = 85)
     {
         // Generar nombre único
         $filename = uniqid() . '.webp';
         $relativePath = $folder . '/' . $filename;
-        $fullPath = storage_path('app/public/' . $relativePath);
 
-        // Crear directorio si no existe
-        $directory = dirname($fullPath);
-        if (!file_exists($directory)) {
-            mkdir($directory, 0755, true);
-        }
+        // 1. Cargar la imagen usando Intervention Image (Gestión de memoria eficiente)
+        $image = Image::make($uploadedFile);
 
-        // Obtener información de la imagen
-        $imageInfo = getimagesize($uploadedFile->getRealPath());
+        // 2. Definir dimensiones máximas
+        $maxWidth = 1920;
+        $maxHeight = 1920;
         
-        if ($imageInfo === false) {
-            throw new \Exception('Archivo no es una imagen válida');
+        // 3. Redimensionar si es más grande (Manteniendo el aspecto)
+        if ($image->width() > $maxWidth || $image->height() > $maxHeight) {
+            $image->resize($maxWidth, $maxHeight, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize(); // No agranda imágenes pequeñas
+            });
         }
 
-        $mimeType = $imageInfo['mime'];
-        $sourceImage = null;
-
-        // Cargar imagen según su tipo
-        try {
-            switch ($mimeType) {
-                case 'image/jpeg':
-                case 'image/jpg':
-                    $sourceImage = imagecreatefromjpeg($uploadedFile->getRealPath());
-                    break;
-                    
-                case 'image/png':
-                    $sourceImage = imagecreatefrompng($uploadedFile->getRealPath());
-                    // Preservar transparencia
-                    imagealphablending($sourceImage, true);
-                    imagesavealpha($sourceImage, true);
-                    break;
-                    
-                case 'image/gif':
-                    $sourceImage = imagecreatefromgif($uploadedFile->getRealPath());
-                    break;
-                    
-                case 'image/webp':
-                    // Si ya es WebP, solo copiarlo
-                    $sourceImage = imagecreatefromwebp($uploadedFile->getRealPath());
-                    break;
-                    
-                default:
-                    throw new \Exception('Formato de imagen no soportado: ' . $mimeType);
-            }
-
-            if ($sourceImage === false) {
-                throw new \Exception('No se pudo procesar la imagen');
-            }
-
-            // Obtener dimensiones originales
-            $width = imagesx($sourceImage);
-            $height = imagesy($sourceImage);
-
-            // Redimensionar si es muy grande (opcional)
-            $maxWidth = 1920;
-            $maxHeight = 1920;
-
-            if ($width > $maxWidth || $height > $maxHeight) {
-                $ratio = min($maxWidth / $width, $maxHeight / $height);
-                $newWidth = (int)($width * $ratio);
-                $newHeight = (int)($height * $ratio);
-
-                $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
-                
-                // Preservar transparencia en la imagen redimensionada
-                imagealphablending($resizedImage, false);
-                imagesavealpha($resizedImage, true);
-                
-                imagecopyresampled(
-                    $resizedImage, 
-                    $sourceImage, 
-                    0, 0, 0, 0, 
-                    $newWidth, 
-                    $newHeight, 
-                    $width, 
-                    $height
-                );
-                
-                imagedestroy($sourceImage);
-                $sourceImage = $resizedImage;
-            }
-
-            // Convertir a WebP
-            imagewebp($sourceImage, $fullPath, $quality);
-            
-            // Liberar memoria
-            imagedestroy($sourceImage);
-
-            return $relativePath;
-
-        } catch (\Exception $e) {
-            // Limpiar memoria en caso de error
-            if ($sourceImage !== null && is_resource($sourceImage)) {
-                imagedestroy($sourceImage);
-            }
-            throw $e;
-        }
+        // 4. Codificar a WebP y guardar en el disco 'public'
+        // Intervention se encarga de la conversión de PNG con transparencia.
+        Storage::disk('public')->put($relativePath, (string) $image->encode('webp', $quality));
+        
+        // 5. Devolver el path relativo
+        return $relativePath;
     }
 }
