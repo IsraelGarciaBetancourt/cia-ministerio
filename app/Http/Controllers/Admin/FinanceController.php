@@ -13,13 +13,29 @@ class FinanceController extends Controller
     /**
      * Listado de jornadas financieras
      */
-    public function index()
+    public function index(Request $request)
     {
-        $finances = Finance::orderByDesc('finance_date')
-            ->paginate(10);
+        $query = Finance::query();
+
+        // 🔍 Buscar por título
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        // 📅 Filtrar por mes y año
+        if ($request->filled('month') && $request->filled('year')) {
+            $query->whereMonth('finance_date', $request->month)
+                ->whereYear('finance_date', $request->year);
+        }
+
+        $finances = $query
+            ->orderBy('finance_date', 'desc')
+            ->paginate(10)
+            ->withQueryString(); // mantiene filtros al paginar
 
         return view('admin.finances.index', compact('finances'));
     }
+
 
     /**
      * Formulario para crear una nueva jornada financiera
