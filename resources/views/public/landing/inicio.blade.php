@@ -4,9 +4,14 @@
 
 
 {{-- HERO SECTION --}}
-<section class="bg-[#0F0A05] text-white">
-    <div class="max-w-7xl mx-auto px-6 py-24 text-center">
-        <img src="{{ asset('images/logo.png') }}" 
+<section class="bg-cover bg-center bg-no-repeat bg-fixed relative"
+         style="background-image: url('{{ asset('images/hero.webp') }}');">
+    
+    {{-- Overlay oscuro para mejorar la legibilidad del texto (muy recomendado en fondos claros o detallados) --}}
+    <div class="absolute inset-0 bg-black/70"></div>
+    
+    <div class="relative max-w-7xl mx-auto px-6 py-24 text-center z-10">
+        <img src="{{ asset('images/logo.webp') }}" 
              alt="Logo Iglesia" 
              class="mx-auto mb-6 w-40 drop-shadow-xl">
 

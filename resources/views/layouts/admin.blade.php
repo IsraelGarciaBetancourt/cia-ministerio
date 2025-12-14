@@ -2,6 +2,8 @@
 <html lang="es">
 
 <head>
+
+    <x-fav-icons />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Panel Admin — CIA')</title>
@@ -30,10 +32,9 @@
             -translate-x-full md:translate-x-0
             transition-transform duration-300 z-40 shadow-xl">
 
-
         {{-- HEADER LOGO --}}
         <div class="flex items-center gap-3 px-6 h-20 border-b border-white/10">
-            <img src="{{ asset('images/logo.png') }}" class="h-12" alt="Logo">
+            <img src="{{ asset('images/logo.webp') }}" class="h-12" alt="Logo">
             <span class="text-lg font-semibold">CIA Admin</span>
         </div>
 
@@ -49,6 +50,18 @@
                 class="block px-4 py-3 rounded-lg transition font-medium
             {{ request()->routeIs('files.*') ? 'bg-primary-300 text-dark' : 'text-light hover:bg-white/10' }}">
                 📂 Archivos Privados
+            </a>
+
+            <a href="{{ route('finances.index') }}"
+                class="block px-4 py-3 rounded-lg transition font-medium
+            {{ request()->routeIs('finances.*') ? 'bg-primary-300 text-dark' : 'text-light hover:bg-white/10' }}">
+                💰 Finanzas
+            </a>
+
+            <a href="{{ route('brothers.index') }}"
+                class="block px-4 py-3 rounded-lg transition font-medium
+            {{ request()->routeIs('brothers.*') ? 'bg-primary-300 text-dark' : 'text-light hover:bg-white/10' }}">
+                👤 Hermanos
             </a>
         </nav>
 

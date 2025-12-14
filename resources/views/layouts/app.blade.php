@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
+    <x-fav-icons />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'CIA - Ministerio')</title>
@@ -20,7 +22,7 @@
 
             {{-- LOGO + NOMBRE --}}
             <a href="{{ route('landing.inicio') }}" class="flex items-center gap-3">
-                <img src="{{ asset('images/logo.png') }}" class="h-12 w-auto" alt="CIA Ministerio">
+                <img src="{{ asset('images/logo.webp') }}" class="h-12 w-auto" alt="CIA Ministerio">
 
                 <span class="text-xl font-semibold text-white">
                     CIA Ministerio
@@ -33,7 +35,7 @@
                 {{-- Inicio --}}
                 <a href="{{ route('landing.inicio') }}"
                    class="transition 
-                          {{ request()->routeIs('landing.*') 
+                          {{ request()->routeIs('landing.inicio') 
                                 ? 'text-[#F2CB05]' 
                                 : 'text-white hover:text-[#F2CB05]' }}">
                     Inicio
@@ -49,23 +51,34 @@
                 </a>
 
                 {{-- Sobre Nosotros --}}
-                <a href="{{ url('/about') }}"
+                <a href="{{ route('landing.about') }}"
                    class="transition 
-                          {{ request()->is('about') 
+                          {{ request()->routeIs('landing.about')
                                 ? 'text-[#F2CB05]' 
                                 : 'text-white hover:text-[#F2CB05]' }}">
                     Sobre Nosotros
                 </a>
 
+                {{-- Login --}}
+                <a href="{{ url('/login') }}"
+                   class="transition 
+                          {{ request()->is('login') 
+                                ? 'text-[#F2CB05]' 
+                                : 'text-white hover:text-[#F2CB05]' }}">
+                    Login
+                </a>
+
                 @auth
+                    <p class="text-white">|</p>
+
                     <a href="{{ route('posts.index') }}"
-                       class="text-sm transition text-white hover:text-[#F2CB05]">
+                       class="transition text-white hover:text-[#F2CB05]">
                         Admin
                     </a>
 
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button class="ml-4 text-sm text-white hover:text-red-400 transition">
+                        <button class="ml-4 text-white hover:text-red-400 transition">
                             Cerrar Sesión
                         </button>
                     </form>
@@ -88,7 +101,7 @@
 
                 <a href="{{ route('landing.inicio') }}"
                    class="block transition 
-                          {{ request()->routeIs('landing.*') 
+                          {{ request()->routeIs('landing.inicio') 
                                 ? 'text-[#F2CB05]' 
                                 : 'text-white hover:text-[#F2CB05]' }}">
                     Inicio
@@ -102,15 +115,25 @@
                     Blog
                 </a>
 
-                <a href="{{ url('/about') }}"
+                <a href="{{ route('landing.about') }}"
                    class="block transition 
-                          {{ request()->is('about') 
+                          {{ request()->routeIs('landing.about') 
                                 ? 'text-[#F2CB05]' 
                                 : 'text-white hover:text-[#F2CB05]' }}">
                     Sobre Nosotros
                 </a>
 
+                <a href="{{ url('/login') }}"
+                   class="block transition 
+                          {{ request()->is('login') 
+                                ? 'text-[#F2CB05]' 
+                                : 'text-white hover:text-[#F2CB05]' }}">
+                    Login
+                </a>
+
                 @auth
+                    <p class="text-white">-----------</p>
+
                     <a href="{{ route('posts.index') }}"
                        class="block text-sm text-white hover:text-[#F2CB05] transition">
                         Admin
@@ -164,7 +187,7 @@
                             <a href="{{ route('blog.index') }}" class="text-cia-light/70 hover:text-gold-300 transition">Blog</a>
                         </li>
                         <li>
-                            <a href="{{ url('/about') }}" class="text-cia-light/70 hover:text-gold-300 transition">Sobre Nosotros</a>
+                            <a href="{{ route('landing.about') }}" class="text-cia-light/70 hover:text-gold-300 transition">Sobre Nosotros</a>
                         </li>
                     </ul>
                 </div>
@@ -174,7 +197,7 @@
                     <h3 class="text-lg font-bold text-gold-300 mb-3">Contacto</h3>
                     <ul class="space-y-2 text-sm text-cia-light/70">
                         <li>📧 contacto@ciaministerio.com</li>
-                        <li>📍 Paccha, Junín, PE</li>
+                        <li>📍 Huancayo, Junín, PE</li>
                     </ul>
                 </div>
 
