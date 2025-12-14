@@ -22,7 +22,7 @@
 
             {{-- LOGO + NOMBRE --}}
             <a href="{{ route('landing.inicio') }}" class="flex items-center gap-3">
-                <img src="{{ asset('images/logo.webp') }}" class="h-12 w-auto" alt="CIA Ministerio">
+                <img src="{{ asset('images/Logo.webp') }}" class="h-12 w-auto" alt="CIA Ministerio">
 
                 <span class="text-xl font-semibold text-white">
                     CIA Ministerio

@@ -11,7 +11,7 @@
     <div class="absolute inset-0 bg-black/70"></div>
     
     <div class="relative max-w-7xl mx-auto px-6 py-24 text-center z-10">
-        <img src="{{ asset('images/logo.webp') }}" 
+        <img src="{{ asset('images/Logo.webp') }}" 
              alt="Logo Iglesia" 
              class="mx-auto mb-6 w-40 drop-shadow-xl">
 
