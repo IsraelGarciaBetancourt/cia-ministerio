@@ -34,7 +34,7 @@
 
         {{-- HEADER LOGO --}}
         <div class="flex items-center gap-3 px-6 h-20 border-b border-white/10">
-            <img src="{{ asset('images/logo.webp') }}" class="h-12" alt="Logo">
+            <img src="{{ asset('images/Logo.webp') }}" class="h-12" alt="Logo">
             <span class="text-lg font-semibold">CIA Admin</span>
         </div>
 
